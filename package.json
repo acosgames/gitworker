@@ -4,8 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev-gitwebhook": "nodemon --inspect=10002 --watch . --watch ../fsg-shared/ gitwebhook.js"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  },
+  "dependencies": {
+    "github-webhook-handler": "^1.0.0",
+    "smee-client": "^1.2.2",
+    "fsg-shared": "file:../fsg-shared"
+  }
 }
