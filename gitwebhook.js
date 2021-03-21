@@ -7,9 +7,11 @@ const PersonService = require('fsg-shared/services/person');
 const person = new PersonService();
 const DevGameService = require('fsg-shared/services/devgame');
 const devgame = new DevGameService();
+const credutil = require('fsg-shared/util/credentials');
+const credentials = credutil();
 
 const gh = require('fsg-shared/services/github');
-var port = process.env.PORT || 9000;
+var port = process.env.PORT || credentials.platform.gitworker.port;
 const FSG = process.env.FSG;
 
 
