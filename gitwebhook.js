@@ -145,15 +145,15 @@ handler.on('organization', async function (event) {
                 let existing = await person.findUser(user);
                 if (existing) {
 
-                    let teamResult = await person.createGithubUserTeam(existing);
+                    // let teamResult = await person.createGithubUserTeam(existing);
 
-                    if (!teamResult || !teamResult.data) {
-                        console.error(existing);
-                        throw new Error("Invalid team result");
-                    }
-                    console.log(teamResult.data);
+                    // if (!teamResult || !teamResult.data) {
+                    //     console.error(existing);
+                    //     throw new Error("Invalid team result");
+                    // }
+                    // console.log(teamResult.data);
 
-                    user = { id: existing.id, isdev: 1, github_teamid: teamResult.data.id };
+                    user = { id: existing.id, isdev: 1 };
                     let updateResult = await person.updateUser(user);
                     console.log(updateResult);
 
