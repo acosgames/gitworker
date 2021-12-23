@@ -68,7 +68,7 @@ handler.on('repository_import', async function (event) {
                 let type = parts.pop();
                 repoName = parts.join('-');
 
-                let game = { shortid: repoName };
+                let game = { game_slug: repoName };
                 let existing = await devgame.findGame(game);
                 // let existing = await person.findUser(user);
                 if (existing) {
