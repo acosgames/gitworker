@@ -3,14 +3,14 @@ var createHandler = require('github-webhook-handler')
 var handler = createHandler({ path: '/webhook', secret: 'XyNmjfdmVpNw7RRt' })
 const SmeeClient = require('smee-client')
 
-const PersonService = require('fsg-shared/services/person');
+const PersonService = require('shared/services/person');
 const person = new PersonService();
-const DevGameService = require('fsg-shared/services/devgame');
+const DevGameService = require('shared/services/devgame');
 const devgame = new DevGameService();
-const credutil = require('fsg-shared/util/credentials');
+const credutil = require('shared/util/credentials');
 const credentials = credutil();
 
-const gh = require('fsg-shared/services/github');
+const gh = require('shared/services/github');
 var port = process.env.PORT || credentials.platform.gitworker.port;
 const FSG = process.env.FSG;
 

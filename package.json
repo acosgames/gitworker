@@ -1,11 +1,11 @@
 {
-  "name": "fsg-gitworker",
+  "name": "gitworker",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev-gitwebhook": "pm2 start gitwebhook.js --name fsg-gitwebhook --node-args=\"--inspect=10004\" --watch \". ../fsg-shared\" --ignore-watch \"package.json node_modules\""
+    "dev-gitwebhook": "pm2 start gitwebhook.js --name gitwebhook --node-args=\"--inspect=10004\" --watch \". ../shared\" --ignore-watch \"package.json node_modules\""
   },
   "author": "",
   "license": "ISC",
@@ -15,6 +15,6 @@
   "dependencies": {
     "github-webhook-handler": "^1.0.0",
     "smee-client": "^1.2.2",
-    "fsg-shared": "file:../fsg-shared"
+    "shared": "file:../shared"
   }
 }
