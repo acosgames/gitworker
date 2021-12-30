@@ -12,14 +12,14 @@ const credentials = credutil();
 
 const gh = require('shared/services/github');
 var port = process.env.PORT || credentials.platform.gitworker.port;
-const FSG = process.env.FSG;
+const ACOSENV = process.env.ACOSENV;
 
 
 
-if (FSG != 'prod' && FSG != 'production') {
+if (ACOSENV != 'prod' && ACOSENV != 'production') {
 
     const smee = new SmeeClient({
-        source: 'https://smee.io/8QuTFTiTnF8fmjYw',
+        source: 'https://smee.io/ah6ZAbzoPryGOuo',
         target: 'http://localhost:9000/webhook',
         logger: console
     })
