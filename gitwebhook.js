@@ -29,7 +29,7 @@ if (FSG != 'prod' && FSG != 'production') {
     // // Stop forwarding events
     // events.close()
 }
-//https://github.com/orgs/fivesecondgames/invitation
+//https://github.com/orgs/acosgames/invitation
 
 http.createServer(function (req, res) {
     handler(req, res, function (err) {
