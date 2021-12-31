@@ -12,11 +12,11 @@ const credentials = credutil();
 
 const gh = require('shared/services/github');
 var port = process.env.PORT || credentials.platform.gitworker.port;
-const ACOSENV = process.env.ACOSENV;
+const NODE_ENV = process.env.NODE_ENV;
 
 
 
-if (ACOSENV != 'prod' && ACOSENV != 'production') {
+if (NODE_ENV != 'prod' && NODE_ENV != 'production') {
 
     const smee = new SmeeClient({
         source: 'https://smee.io/ah6ZAbzoPryGOuo',
