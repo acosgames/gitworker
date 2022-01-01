@@ -1,6 +1,6 @@
 var http = require('http')
 var createHandler = require('github-webhook-handler')
-var handler = createHandler({ path: '/webhook', secret: 'XyNmjfdmVpNw7RRt' })
+var handler = createHandler({ path: '/gitworker', secret: 'XyNmjfdmVpNw7RRt' })
 const SmeeClient = require('smee-client')
 
 const PersonService = require('shared/services/person');
