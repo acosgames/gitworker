@@ -14,13 +14,13 @@ const gh = require('shared/services/github');
 var port = process.env.PORT || credentials.platform.gitworker.port;
 const NODE_ENV = process.env.NODE_ENV;
 
-
+console.log("GitWorker started on port: ", port);
 
 if (NODE_ENV != 'prod' && NODE_ENV != 'production') {
 
     const smee = new SmeeClient({
         source: 'https://smee.io/ah6ZAbzoPryGOuo',
-        target: 'http://localhost:9000/webhook',
+        target: 'http://localhost:9000/gitworker',
         logger: console
     })
 
