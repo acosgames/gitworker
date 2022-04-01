@@ -101,7 +101,7 @@ async function notifyDiscord(msg) {
                 embed = embed
                     .setAuthor({ name: msg.mode.toUpperCase() + ' Queue' })
                     .setURL('https://acos.games/join/' + msg.game_slug + '+' + msg.mode)
-                    .setDescription(`Join now by clicking thumbnail.\n\n${playerOutput}`)
+                    .setDescription(`Join now by clicking game title.\n\n${playerOutput}`)
                 // channelLog.send({ embeds: [embed] });
 
                 playerOutput += '**Players waiting in queue**\n';
