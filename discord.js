@@ -133,8 +133,14 @@ async function notifyDiscord(msg) {
                 }
 
                 if (queueList.length == 0) {
-                    if (msgRef)
-                        await msgRef.delete();
+                    if (msgRef) {
+                        try {
+                            await msgRef.delete();
+                        }
+                        catch (e) {
+                            console.error(e);
+                        }
+                    }
                     delete messageReferences[key];
                 }
 
@@ -178,14 +184,14 @@ async function notifyDiscord(msg) {
         case 'gameover':
 
 
-            msg.notifyInfo.sort((a, b) => {
+            msg.users.sort((a, b) => {
                 return a.rank - b.rank;
             })
 
-            playerOutput += '**Players**\n'
-            for (var i = 0; i < msg.notifyInfo.length; i++) {
-                let player = msg.notifyInfo[i];
-                playerOutput += (player.rank) + '. ' + player.name + '(' + player.rating + '/' + player.ratingTxt + ')\n';
+            playerOutput += '**Room Ranking**\n'
+            for (var i = 0; i < msg.users.length; i++) {
+                let player = msg.users[i];
+                playerOutput += (player.rank) + '. ' + player.name + ' (' + player.rating + ' / ' + player.ratingTxt + ')\n';
             }
 
             embed = embed
