@@ -16,6 +16,9 @@ const NODE_ENV = process.env.NODE_ENV;
 
 console.log("GitWorker started on port: ", port);
 
+
+const discord = require('./discord');
+
 if (NODE_ENV != 'prod' && NODE_ENV != 'production') {
 
     const smee = new SmeeClient({
