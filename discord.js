@@ -46,6 +46,10 @@ async function onNotifyDiscord(msg) {
 
 async function notifyDiscord(msg) {
 
+    if (process.env.NODE_ENV == 'localhost' || process.env.NODE_ENV == 'mobile') {
+        return;
+    }
+
     if (!msg) {
         console.error("Missing message: ", msg);
         return;
@@ -129,7 +133,7 @@ async function notifyDiscord(msg) {
                     }
 
                     if (!alreadyCreated)
-                        msgRef.edit({ embeds: [embed] })
+                        await msgRef.edit({ embeds: [embed] })
                 }
 
                 if (queueList.length == 0) {
