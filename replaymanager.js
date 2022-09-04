@@ -181,4 +181,4 @@ async function saveReplay(room_slug) {
     })
 }
 
-// run();
+run();
