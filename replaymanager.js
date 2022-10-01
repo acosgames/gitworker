@@ -157,7 +157,7 @@ async function saveReplay(room_slug) {
 
                 try {
                     let filename = `${Date.now()}.json`;
-                    let Key = `g/${meta.game_slug}/replays/${meta.version}/${meta.mode}/${filename}`
+                    let Key = `g/${meta.game_slug}/replays/${meta.mode}.${meta.version}.${filename}`
                     let response = await s3.multiPartUpload('acospub', Key, buffer)
 
                     delete replays[room_slug];
