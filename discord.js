@@ -6,6 +6,7 @@ const rabbitmq = require('shared/services/rabbitmq');
 
 // Require the necessary discord.js classes
 const { Client, Intents, MessageEmbed } = require('discord.js');
+const ratingtext = require('shared/util/ratingtext');
 
 // Create a new client instance
 const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
@@ -196,7 +197,8 @@ async function notifyDiscord(msg) {
             playerOutput += '**Room Ranking**\n'
             for (var i = 0; i < msg.users.length; i++) {
                 let player = msg.users[i];
-                playerOutput += (player.rank) + '. ' + player.name + ' (' + player.rating + ' / ' + player.ratingTxt + ')\n';
+                let ratingText = ratingtext.ratingToRank(player.rating);
+                playerOutput += (player.rank) + '. ' + player.name + ' (' + player.rating + ' / ' + ratingText + ')\n';
             }
 
             embed = embed
