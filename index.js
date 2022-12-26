@@ -2,4 +2,4 @@
 
 require('./gitwebhook');
 require('./discord');
-// require('./replaymanager');
+require('./replaymanager');

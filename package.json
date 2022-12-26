@@ -17,8 +17,8 @@
     "aws-sdk": "^2.1204.0",
     "discord-api-types": "^0.30.0",
     "discord.js": "^13.6.0",
-    "github-webhook-handler": "^1.0.0",
     "shared": "file:../shared",
+    "github-webhook-handler": "^1.0.0",
     "smee-client": "^1.2.2"
   }
 }

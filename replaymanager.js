@@ -7,6 +7,7 @@ const rabbitmq = require('shared/services/rabbitmq');
 const zlib = require("zlib");
 
 const storage = require('./storage');
+// import { encode } from 'shared/util/encoder';
 const { encode } = require('shared/util/encoder');
 
 const BackBlazeService = require("./BackBlazeService");
@@ -141,16 +142,13 @@ async function saveReplay(room_slug) {
             rj(new Error('Missing room meta for ' + room_slug));
             return;
         }
-        // return;
 
-        let encoded = encode(history);
+        let encoded = JSON.stringify(history);//encode(history);
 
-        const finalBuffer = Buffer.from(encoded);
-
-        const base64String = finalBuffer.toString('base64');
-
-        //let b64 = encoded.toString('base64');
-        let json = `"${base64String}"`
+        // const finalBuffer = Buffer.from(encoded);
+        // const base64String = finalBuffer.toString('base64');
+        // let json = `"${base64String}"`
+        let json = `${encoded}`
 
         zlib.gzip(json, async (err, buffer) => {
             if (!err) {
