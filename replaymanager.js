@@ -92,7 +92,16 @@ async function onRoomUpdate(msg) {
         if (copy.type == 'gameover') {
 
             try {
-                saveReplay(room_slug);
+
+                if (roomMetas[room_slug].mode != 'rank') {
+                    delete replays[room_slug];
+                    delete roomMetas[room_slug];
+                    console.warn('Replays only created for RANK modes: ' + room_slug, roomMetas[room_slug].mode);
+                    return;
+                }
+
+
+                await saveReplay(room_slug);
             }
             catch (e) {
                 console.error(e);
@@ -142,6 +151,7 @@ async function saveReplay(room_slug) {
             rj(new Error('Missing room meta for ' + room_slug));
             return;
         }
+
 
         let encoded = JSON.stringify(history);//encode(history);
 
