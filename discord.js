@@ -47,7 +47,7 @@ async function onNotifyDiscord(msg) {
 
 async function notifyDiscord(msg) {
 
-    return;
+    // return;
     if (process.env.NODE_ENV == 'localhost' || process.env.NODE_ENV == 'mobile') {
         return;
     }
