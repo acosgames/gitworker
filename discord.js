@@ -49,7 +49,7 @@ async function notifyDiscord(msg) {
 
     // return;
     if (process.env.NODE_ENV == 'localhost' || process.env.NODE_ENV == 'mobile') {
-        return;
+        // return;
     }
 
     if (!msg) {
