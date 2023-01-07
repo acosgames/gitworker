@@ -97,8 +97,11 @@ async function notifyDiscord(msg) {
                 let username;
 
                 for (var i = 0; i < queueList.length; i++) {
-                    shortid = queueList[i];
-                    username = await redis.hget('queuePlayers', shortid);
+                    let parts = queueList[i].split('|');
+                    shortid = parts[0];
+                    username = parts[1];
+                    // shortid = queueList[i];
+                    // username = await redis.hget('queuePlayers', shortid);
 
                     playerOutput += (i + 1) + '. ' + username.replace(/"/ig, '');
                     // this.addToQueue(shortid, username, game_slug, mode, true);
