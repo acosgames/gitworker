@@ -46,6 +46,10 @@ async function onRoomUpdate(msg) {
     if (!room_slug)
         return true;
 
+    if (process.env.NODE_ENV == 'localhost' || process.env.NODE_ENV == 'mobile') {
+        return true;
+    }
+
     try {
 
         let history = replays[room_slug];
@@ -135,6 +139,9 @@ async function onRoomUpdate(msg) {
 async function saveReplay(room_slug) {
 
     return new Promise((rs, rj) => {
+
+
+
         let history = replays[room_slug];
         if (!history) {
             rj(new Error('Missing history' + room_slug));
