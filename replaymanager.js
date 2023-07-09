@@ -47,7 +47,7 @@ async function onRoomUpdate(msg) {
         return true;
 
     if (process.env.NODE_ENV == 'localhost' || process.env.NODE_ENV == 'mobile') {
-        return true;
+        //return true;
     }
 
     try {
