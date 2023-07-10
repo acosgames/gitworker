@@ -10,15 +10,15 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "nodemon": "^2.0.7"
+    "nodemon": "^3.0.1"
   },
   "dependencies": {
     "@discordjs/rest": "^0.3.0",
     "aws-sdk": "^2.1204.0",
     "discord-api-types": "^0.30.0",
     "discord.js": "^13.6.0",
-    "shared": "file:../shared",
     "github-webhook-handler": "^1.0.0",
+    "shared": "file:../shared",
     "smee-client": "^1.2.2"
   }
 }
