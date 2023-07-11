@@ -52,9 +52,12 @@ async function onRoomUpdate(msg) {
 
     try {
 
+        let roomMeta = null;
         let history = replays[room_slug];
         if (!history) {
-            history = [];
+            roomMeta = await storage.getRoomMeta(room_slug);
+            roomMetas[room_slug] = roomMeta;
+            history = [roomMeta];
         }
 
         // let gamestate = delta.merge(previousGamestate, msg.payload);
@@ -88,7 +91,7 @@ async function onRoomUpdate(msg) {
         }
 
         if (copy.type == 'join') {
-            roomMetas[room_slug] = await storage.getRoomMeta(room_slug);
+            roomMetas[room_slug] = roomMeta || await storage.getRoomMeta(room_slug);
         }
 
         history.push(copy)
@@ -106,6 +109,11 @@ async function onRoomUpdate(msg) {
 
 
                 await saveReplay(room_slug);
+
+                //cleanup
+                delete replays[room_slug];
+                delete roomMetas[room_slug];
+                return true;
             }
             catch (e) {
                 console.error(e);
