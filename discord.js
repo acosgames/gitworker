@@ -168,7 +168,7 @@ async function notifyDiscord(msg) {
                 let player = action.user;
                 if (!player)
                     continue;
-                playerOutput += (i + 1) + '. ' + player.name + '\n';
+                playerOutput += (i + 1) + '. ' + player.displayname + '\n';
             }
 
             embed = embed
