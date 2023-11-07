@@ -7,8 +7,12 @@ const rabbitmq = require('shared/services/rabbitmq');
 const zlib = require("zlib");
 
 const storage = require('./storage');
-// import { encode } from 'shared/util/encoder';
-const { encode } = require('shared/util/encoder');
+// import { encode } from 'acos-json-encoder';
+const { encode } = require('acos-json-encoder');
+
+// let ACOSDictionary = require('shared/model/acos-dictionary.json');
+// createDefaultDict(ACOSDictionary)
+
 
 const BackBlazeService = require("./BackBlazeService");
 const s3 = new BackBlazeService();
