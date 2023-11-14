@@ -71,7 +71,7 @@ async function notifyDiscord(msg) {
         return;
     }
     let playerOutput = '';
-    let thumbnail = 'https://cdn.acos.games/file/acospub/g/' + msg.game_slug + '/preview/' + msg.thumbnail;
+    let thumbnail = 'https://assets.acos.games/g/' + msg.game_slug + '/preview/' + msg.thumbnail;
     let embed = new MessageEmbed();
     embed = embed
         .setColor('#0099ff')

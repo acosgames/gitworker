@@ -55,13 +55,13 @@ module.exports = class BackBlazeService {
             options.ContentType = options.ContentType || 'application/json';
             options.ACL = options.ACL || 'public-read';
             options.StorageClass = options.StorageClass || 'STANDARD';
-            options.ContentEncoding = options.ContentEncoding || 'gzip';
+            // options.ContentEncoding = options.ContentEncoding || 'gzip';
 
             if (options.ContentEncoding == 'gzip')
                 options.Metadata = {
                     'Content-Type': 'application/json',
-                    'Content-Encoding': 'gzip',
-                    'b2-content-encoding': 'gzip'
+                    // 'Content-Encoding': 'gzip',
+                    // 'b2-content-encoding': 'gzip'
                 }
 
             try {
