@@ -156,7 +156,7 @@ handler.on('organization', async function (event) {
                     // }
                     // console.log(teamResult.data);
 
-                    user = { id: existing.id, isdev: 1 };
+                    user = { shortid: existing.shortid, isdev: 1 };
                     let updateResult = await person.updateUser(user);
                     console.log(updateResult);
 
@@ -173,7 +173,7 @@ handler.on('organization', async function (event) {
                 let existing = await person.findUser(user);
                 if (existing) {
 
-                    user = { id: existing.id, isdev: 0 };
+                    user = { shortid: existing.shortid, isdev: 0 };
                     let result = await person.updateUser(user);
                 }
             }
