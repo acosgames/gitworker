@@ -3,7 +3,7 @@ const credutil = require('shared/util/credentials');
 const credentials = credutil();
 const redis = require('shared/services/redis');
 const rabbitmq = require('shared/services/rabbitmq');
-
+const mimetypes = require("shared/util/mimetypes.json");
 const zlib = require("zlib");
 
 const storage = require('./storage');
@@ -14,8 +14,12 @@ const { encode } = require('acos-json-encoder');
 // createDefaultDict(ACOSDictionary)
 
 
-const BackBlazeService = require("./BackBlazeService");
-const s3 = new BackBlazeService();
+// const BackBlazeService = require("./BackBlazeService");
+// const s3 = new BackBlazeService();
+
+const ObjectStorageService = require("shared/services/objectstorage");
+const s3 = new ObjectStorageService();
+
 const room = require('shared/services/room');
 
 const MIN_UPDATES_REQUIRED = 1;
@@ -32,12 +36,18 @@ async function run() {
     }
 
 
-    let qWS = await rabbitmq.findExistingQueue('replayManager');;
-    await rabbitmq.subscribeQueue(qWS, onRoomUpdate);
+    console.log("NODE_APP_INSTANCE = ", process.env.NODE_APP_INSTANCE);
 
     setTimeout(async () => {
-        let queueKey = await rabbitmq.subscribe('ws', 'onRoomUpdate', onRoomUpdate, qWS);
-    }, 3000)
+
+        let qWS = await rabbitmq.findExistingQueue('replayManager');;
+        await rabbitmq.subscribeQueue(qWS, onRoomUpdate);
+
+        setTimeout(async () => {
+
+            let queueKey = await rabbitmq.subscribe('ws', 'onRoomUpdate', onRoomUpdate, qWS);
+        }, 100)
+    }, 100)
 
 }
 
@@ -150,7 +160,7 @@ async function onRoomUpdate(msg) {
 
 async function saveReplay(room_slug) {
 
-    return new Promise((rs, rj) => {
+    return new Promise(async (rs, rj) => {
 
 
 
@@ -177,34 +187,43 @@ async function saveReplay(room_slug) {
         // const finalBuffer = Buffer.from(encoded);
         // const base64String = finalBuffer.toString('base64');
         // let json = `"${base64String}"`
-        let json = `${encoded}`
 
-        zlib.gzip(json, async (err, buffer) => {
-            if (!err) {
 
-                try {
-                    let filename = `${Date.now()}.json`;
-                    let Key = `g/${meta.game_slug}/replays/${meta.mode}.${meta.version}.${filename}`
-                    let response = await s3.multiPartUpload('acospub', Key, buffer)
+        try {
+            let json = `${encoded}`
+            var buf = Buffer.from(json, 'utf8');
 
-                    delete replays[room_slug];
-                    delete roomMetas[room_slug];
+            let filename = `${Date.now()}.json`;
+            let Key = `g/${meta.game_slug}/replays/${meta.mode}.${meta.version}.${filename}`
+            let ContentType = mimetypes['.json'] || 'application/octet-stream'
+            let ACL = 'public-read'
 
-                    await room.createRoomReplay(meta.game_slug, meta.version, meta.mode, filename);
+            let params = {
+                Bucket: 'acospub',
+                Key,
+                Body: buf,
+                ContentType,
+                ACL,
+            };
 
-                    // console.log(buffer.toString('base64'));
-                    console.log("Created Replay at: ", Key);
-                    rs(response);
-                }
-                catch (e) {
-                    rj(e);
-                }
+            console.log("S3 Uploading:", Key);
+            let uploader = await s3.upload(params)
+            let data = await uploader.promise();
+            console.log("Upload finished: ", data);
 
-            }
-            else {
-                rj(err);
-            }
-        })
+            delete replays[room_slug];
+            delete roomMetas[room_slug];
+
+            await room.createRoomReplay(meta.game_slug, meta.version, meta.mode, filename);
+
+            // console.log(buffer.toString('base64'));
+            console.log("Created Replay at: ", Key);
+            rs(Key);
+        }
+        catch (e) {
+            rj(e);
+        }
+
     })
 }
 
