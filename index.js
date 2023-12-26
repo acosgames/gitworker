@@ -3,6 +3,7 @@
 require('./gitwebhook');
 require('./discord');
 require('./replaymanager');
+require('./postGameManager');
 
 console.log("STARTING GITWORKER!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
