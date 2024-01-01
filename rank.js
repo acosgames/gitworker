@@ -5,6 +5,7 @@ const GameService = require('shared/services/game');
 const game = new GameService();
 
 const { setPlayerRating } = require('shared/services/room');
+const { muRating, clampMu, clampSigma } = require('shared/util/ratingconfig');
 
 class Rank {
     constructor() { }
@@ -82,10 +83,13 @@ class Rank {
         let playerRatings = {};
         let rankOne = [];
         let rankOther = [];
-        let playerList = [];
+        let playerList = Object.keys(players);
+        let teamList = Object.keys(teams || {});
+        if (teamList.length > 0)
+            return;
 
 
-        let roomRatings = await room.findPlayerRatings(room_slug, game_slug);
+        let roomRatings = await room.findPlayerRatings(playerList, game_slug);
         if (roomRatings && roomRatings.length > 0) {
             for (var i = 0; i < roomRatings.length; i++) {
                 let roomRating = roomRatings[i]
@@ -185,13 +189,6 @@ class Rank {
             player._played = rating.played;
 
 
-            notifyInfo.push({
-                name: player.name,
-                rank: player.rank,
-                score: player.score,
-                rating: player.rating,
-                // ratingTxt: player.ratingTxt,
-            })
 
             ratingsList.push({
                 shortid: id,
@@ -211,9 +208,165 @@ class Rank {
             setPlayerRating(id, meta.game_slug, rating);
         }
 
-        let gameinfo = await room.getGameInfo(game_slug);
 
-        rabbitmq.publishQueue('notifyDiscord', { 'type': 'gameover', users: notifyInfo, game_slug, room_slug, game_title: (gameinfo?.name || game_slug), thumbnail: (gameinfo?.preview_images || '') })
+        room.updateAllPlayerRatings(ratingsList);
+
+        // console.log("After Rating: ", storedPlayerRatings);
+        return ratingsList;
+    }
+
+
+
+    async processTeamRatings(meta, players, teams, storedPlayerRatings) {
+
+        const game_slug = meta?.game_slug;
+        const room_slug = meta?.room_slug;
+
+        //add saved ratings to players in openskill format
+        storedPlayerRatings = storedPlayerRatings || {};
+        let playerRatings = {};
+        let rankOne = [];
+        let rankOther = [];
+        let playerList = Object.keys(players);
+        let teamList = Object.keys(teams || {});
+        if (teamList.length == 0)
+            return;
+
+        let roomRatings = await room.findPlayerRatings(playerList, game_slug);
+        if (roomRatings && roomRatings.length > 0) {
+            for (var i = 0; i < roomRatings.length; i++) {
+                let roomRating = roomRatings[i]
+                storedPlayerRatings[roomRating.shortid] = roomRating;
+            }
+        }
+
+        for (var id in players) {
+            let player = players[id];
+
+            if (!(id in storedPlayerRatings)) {
+                storedPlayerRatings[id] = await room.findPlayerRating(id, game_slug);
+            }
+            if ((typeof player.rank === 'undefined')) {
+                console.error("Player [" + id + "] (" + player.name + ") is missing rank")
+                return;
+            }
+
+            let playerRating = storedPlayerRatings[id];
+
+            playerRating.rank = player.rank;
+            if (teams && player.teamid)
+                playerRating.rank = teams[player.teamid].rank;
+
+            if ((typeof player.score !== 'undefined')) {
+                playerRating.score = player.score;
+            }
+            playerRatings[id] = playerRating;
+
+        }
+
+        let lowestRank = 99999;
+        for (var id in teams) {
+            let team = teams[id];
+            if (team.rank < lowestRank)
+                lowestRank = team.rank;
+        }
+        for (var id in teams) {
+            let team = teams[id];
+            if ((typeof team.rank === 'undefined')) {
+                console.error("Team [" + id + "] (" + team.name + ") is missing rank")
+                return;
+            }
+
+            if (team.rank == lowestRank) {
+                rankOne.push(id);
+            }
+            else {
+                rankOther.push(id);
+            }
+        }
+
+        let isTied = false;
+        if (rankOther.length == 0) {
+            isTied = true;
+            for (var id of rankOne) {
+
+                let team = teams[id];
+                for (let i = 0; i < team.players.length; i++) {
+                    let shortid = team.players[i];
+                    let playerRating = storedPlayerRatings[shortid];
+                    playerRating.tie++;
+                }
+            }
+        }
+        else {
+            for (var id of rankOne) {
+                let team = teams[id];
+                for (let i = 0; i < team.players.length; i++) {
+                    let shortid = team.players[i];
+                    let playerRating = storedPlayerRatings[shortid];
+                    playerRating.win++;
+                }
+            }
+            for (var id of rankOther) {
+                let team = teams[id];
+                for (let i = 0; i < team.players.length; i++) {
+                    let shortid = team.players[i];
+                    let playerRating = storedPlayerRatings[shortid];
+                    playerRating.loss++;
+                }
+            }
+        }
+
+
+
+
+        // console.log("Before Rating: ", playerRatings);
+        //run OpenSkill rating system
+        this.calculateRanks(playerRatings, teams);
+
+        //update player ratings from openskill mutation of playerRatings
+        let ratingsList = [];
+
+        let notifyInfo = [];
+
+        for (var id in players) {
+            let player = players[id];
+
+            if (!(id in playerRatings)) {
+                continue;
+            }
+            let rating = playerRatings[id];
+
+            rating.played = Number(rating.played) + 1;
+
+            //UPDATE PLAYER data sent back, using private fields to hide the win/loss/tie/played counts from others
+            player.rating = rating.rating;
+            // player.ratingTxt = game.ratingToRank(rating.rating);
+            player._win = rating.win;
+            player._loss = rating.loss;
+            player._tie = rating.tie;
+            player._played = rating.played;
+
+
+
+            ratingsList.push({
+                shortid: id,
+                game_slug: meta.game_slug,
+                rating: rating.rating,
+                mu: rating.mu,
+                sigma: rating.sigma,
+                win: rating.win,
+                tie: rating.tie,
+                loss: rating.loss,
+                highscore: rating.score || 0
+            });
+
+            delete rating['rank'];
+            delete rating['score'];
+
+            setPlayerRating(id, meta.game_slug, rating);
+        }
+
 
         room.updateAllPlayerRatings(ratingsList);
 
@@ -278,9 +431,9 @@ class Rank {
                     let id = team[j];
                     let player = players[id];
                     let playerRating = results[i][j];
-                    player.mu = playerRating.mu;
-                    player.sigma = playerRating.sigma;
-                    player.rating = Math.round(playerRating.mu * 100.0);
+                    player.mu = clampMu(playerRating.mu);
+                    player.sigma = clampSigma(playerRating.sigma);
+                    player.rating = muRating(playerRating.mu);
                 }
             }
 
@@ -329,9 +482,9 @@ class Rank {
                     let id = team[j];
                     let player = players[id];
                     let playerRating = results[i][j];
-                    player.mu = playerRating.mu;
-                    player.sigma = playerRating.sigma;
-                    player.rating = Math.round(playerRating.mu * 100.0);
+                    player.mu = clampMu(playerRating.mu);
+                    player.sigma = clampSigma(playerRating.sigma);
+                    player.rating = muRating(playerRating.mu);
                 }
             }
 
@@ -355,59 +508,40 @@ function test() {
 
     let r = new Rank();
 
-    let playerList = [];
+    let players = {};
 
     //create players
-    for (var i = 0; i < 2; i++) {
-        let id = i;
-        let mu = i == 0 ? 25 : 10;
-        let sigma = 3;
-        let player = {
-            id, mu, sigma
-        }
-        playerList.push(player);
+    // for (var i = 0; i < 2; i++) {
+    //     let id = i;
+    //     let mu = i == 0 ? 25 : 10;
+    //     let sigma = 3;
+    //     players[i] = {
+    //         id, mu, sigma
+    //     };
+    // }
+
+
+
+    // players[0] = { id: 0, mu: 25, sigma: 1.33, rank: 1, score: 100 };
+    // players[1] = { id: 1, mu: 25, sigma: 1.33, rank: 2, score: 50 };
+
+    for (let i = 0; i < 100; i++) {
+        players[i] = { id: i, mu: 25 + (i / 10), sigma: 1.33, rank: i + 1, score: 100 - (i) };
     }
-
-    //fight players
-    for (var i = 0; i < 1; i++) {
-        let player1id = 1;//getRandomInt(0, 2);
-        let player2id = 0;//getRandomInt(2, 4);
-        // if (player1id == player2id) {
-        // i--;
-        // continue;
-        // }
-
-        let player1 = playerList[player1id];
-        let player2 = playerList[player2id];
-
-        let players = {};
-        players[player1id] = player1;
-        players[player2id] = player2;
-
-
-        // if (i < 980) {
-        //     player1.rank = 1;
-        //     player2.rank = 2;
-        //     player1.score = 10;
-        //     player2.score = 50;
-        // }
-        // else {
-        player1.rank = 1;
-        player2.rank = 2;
-        player1.score = 100;
-        player2.score = 50;
-        // }
-
-
-
+    // players[2] = { id: 2, mu: 25, sigma: 1.33, rank: 3, score: 50 };
+    // players[3] = { id: 3, mu: 25, sigma: 1.33, rank: 4, score: 50 };
+    for (var i = 0; i < 100; i++) {
         r.calculateFFA(players);
+        // players[0].rank = i % 2 == 0 ? 1 : 4;
+        // players[3].rank = i % 2 == 0 ? 4 : 1;
     }
 
-    for (var i = 0; i < playerList.length; i++) {
-        console.log("Player [" + i + "] - mu:" + playerList[i].mu + ', sigma:' + playerList[i].sigma);
+
+    for (var id in players) {
+        console.log("Player [" + id + "] - mu:" + players[id].mu + ', sigma:' + players[id].sigma);
     }
 
-    process.exit();
+    // process.exit();
 
 
 

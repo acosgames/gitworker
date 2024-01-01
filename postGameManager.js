@@ -47,6 +47,9 @@ let roomMetas = {};
 async function onRoomGameover(msg) {
     // profiler.StartTime('onRoomUpdate');
     let room_slug = msg.room_slug;
+    let meta = msg.meta;
+    let game_slug = meta.game_slug;
+    let gamestate = msg.payload;
     if (!room_slug)
         return true;
 
@@ -55,17 +58,17 @@ async function onRoomGameover(msg) {
     }
 
     try {
-        let gamestate = structuredClone(msg);// JSON.parse(JSON.stringify(msg));
+        gamestate = structuredClone(gamestate);// JSON.parse(JSON.stringify(msg));
 
-        if (gamestate.type == 'gameover') {
+        if (msg.type == 'gameover') {
 
             try {
-                let meta = await storage.getRoomMeta(room_slug);
+                // let meta = await storage.getRoomMeta(room_slug);
 
-                if (meta.mode != 'rank') {
-                    console.warn('Post Game Manager only created for RANK modes: ' + room_slug, meta.mode);
-                    return true;
-                }
+                // if (meta.mode != 'rank') {
+                // console.warn('Post Game Manager only created for RANK modes: ' + room_slug, meta.mode);
+                // return true;
+                // }
 
                 onGameover(meta, gamestate)
                 return true;
@@ -86,22 +89,57 @@ async function onRoomGameover(msg) {
 
 async function onGameover(meta, gamestate) {
 
-    console.log("GAMEOVER: ", meta, gamestate)
-    if (room.getGameModeName(meta.mode) == 'rank' || meta.mode == 'rank') {
-        let storedPlayerRatings = {};
-        if (gamestate?.timer?.sequence > 2) {
-            if (meta.maxplayers > 1) {
-                await rank.processPlayerRatings(meta, gamestate.players, gamestate.teams, storedPlayerRatings);
-                await room.updateLeaderboard(meta.game_slug, gamestate.players);
-            }
-        }
+    // console.log("GAMEOVER: ", meta, gamestate)
+    if (!meta || meta.mode != 'rank')
+        return;
 
-        if (meta.lbscore || meta.maxplayers == 1) {
-            console.log("Updating high scores: ", gamestate.players);
-            await rank.processPlayerHighscores(meta, gamestate.players, storedPlayerRatings);
-            await room.updateLeaderboardHighscore(meta.game_slug, gamestate.players);
+
+    let game_slug = meta.game_slug;
+    let room_slug = meta.room_slug;
+
+    if (meta.maxplayers > 1) {
+        try {
+            let storedPlayerRatings = {};
+            await rank.processPlayerRatings(meta, gamestate.players, gamestate.teams, storedPlayerRatings);
+            await rank.processTeamRatings(meta, gamestate.players, gamestate.teams, storedPlayerRatings);
+            await room.updateLeaderboard(game_slug, gamestate.players);
+
+            rabbitmq.publish('ws', 'onStatsUpdate', { type: 'rankings', room_slug, payload: gamestate.players });
+
+            let notifyInfo = [];
+            for (let shortid in gamestate.players) {
+                let player = gamestate.players[shortid];
+                notifyInfo.push({
+                    name: player.name,
+                    rank: player.rank,
+                    score: player.score,
+                    rating: player.rating
+                })
+            }
+            let gameinfo = await room.getGameInfo(game_slug);
+
+            rabbitmq.publishQueue('notifyDiscord', { 'type': 'gameover', users: notifyInfo, game_slug, room_slug, game_title: (gameinfo?.name || game_slug), thumbnail: (gameinfo?.preview_images || '') })
+        }
+        catch (e) {
+            console.error(e);
         }
     }
+
+    // if (room.getGameModeName(meta.mode) == 'rank' || meta.mode == 'rank') {
+    //     let storedPlayerRatings = {};
+    //     if (gamestate?.timer?.sequence > 2) {
+    //         if (meta.maxplayers > 1) {
+    //             await rank.processPlayerRatings(meta, gamestate.players, gamestate.teams, storedPlayerRatings);
+    //             await room.updateLeaderboard(meta.game_slug, gamestate.players);
+    //         }
+    //     }
+
+    //     if (meta.lbscore || meta.maxplayers == 1) {
+    //         console.log("Updating high scores: ", gamestate.players);
+    //         await rank.processPlayerHighscores(meta, gamestate.players, storedPlayerRatings);
+    //         await room.updateLeaderboardHighscore(meta.game_slug, gamestate.players);
+    //     }
+    // }
 }
 
 run();
