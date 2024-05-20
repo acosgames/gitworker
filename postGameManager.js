@@ -1,22 +1,20 @@
-
-const credutil = require('shared/util/credentials');
+const credutil = require("shared/util/credentials");
 const credentials = credutil();
-const redis = require('shared/services/redis');
-const rabbitmq = require('shared/services/rabbitmq');
-const storage = require('./storage');
+const redis = require("shared/services/redis");
+const rabbitmq = require("shared/services/rabbitmq");
+const storage = require("./storage");
 
-const rank = require('./rank');
+const rank = require("./rank");
 
 const ObjectStorageService = require("shared/services/objectstorage");
 const s3 = new ObjectStorageService();
 
-const room = require('shared/services/room');
+const room = require("shared/services/room");
 
 const MIN_UPDATES_REQUIRED = 1;
 
-
 function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function run() {
@@ -25,20 +23,21 @@ async function run() {
         await sleep(1000);
     }
 
-
     console.log("NODE_APP_INSTANCE = ", process.env.NODE_APP_INSTANCE);
 
     setTimeout(async () => {
-
-        let qWS = await rabbitmq.findExistingQueue('gameover');;
+        let qWS = await rabbitmq.findExistingQueue("gameover");
         await rabbitmq.subscribeQueue(qWS, onRoomGameover);
 
         setTimeout(async () => {
-
-            let queueKey = await rabbitmq.subscribe('ws', 'onRoomGameover', onRoomGameover, qWS);
-        }, 100)
-    }, 100)
-
+            let queueKey = await rabbitmq.subscribe(
+                "ws",
+                "onRoomGameover",
+                onRoomGameover,
+                qWS
+            );
+        }, 100);
+    }, 100);
 }
 
 let replays = {};
@@ -50,18 +49,19 @@ async function onRoomGameover(msg) {
     let meta = msg.meta;
     let game_slug = meta.game_slug;
     let gamestate = msg.payload;
-    if (!room_slug)
-        return true;
+    if (!room_slug) return true;
 
-    if (process.env.NODE_ENV == 'localhost' || process.env.NODE_ENV == 'mobile') {
+    if (
+        process.env.NODE_ENV == "localhost" ||
+        process.env.NODE_ENV == "mobile"
+    ) {
         //return true;
     }
 
     try {
-        gamestate = structuredClone(gamestate);// JSON.parse(JSON.stringify(msg));
+        gamestate = structuredClone(gamestate); // JSON.parse(JSON.stringify(msg));
 
-        if (msg.type == 'gameover') {
-
+        if (msg.type == "gameover") {
             try {
                 // let meta = await storage.getRoomMeta(room_slug);
 
@@ -70,29 +70,23 @@ async function onRoomGameover(msg) {
                 // return true;
                 // }
 
-                onGameover(meta, gamestate)
+                onGameover(meta, gamestate);
                 return true;
-            }
-            catch (e) {
+            } catch (e) {
                 console.error(e);
             }
-
         }
 
         return true;
-    }
-    catch (e) {
+    } catch (e) {
         console.error(e);
     }
     return false;
 }
 
 async function onGameover(meta, gamestate) {
-
     // console.log("GAMEOVER: ", meta, gamestate)
-    if (!meta || meta.mode != 'rank')
-        return;
-
+    if (!meta || meta.mode != "rank") return;
 
     let game_slug = meta.game_slug;
     let room_slug = meta.room_slug;
@@ -100,11 +94,25 @@ async function onGameover(meta, gamestate) {
     if (meta.maxplayers > 1) {
         try {
             let storedPlayerRatings = {};
-            await rank.processPlayerRatings(meta, gamestate.players, gamestate.teams, storedPlayerRatings);
-            await rank.processTeamRatings(meta, gamestate.players, gamestate.teams, storedPlayerRatings);
+            await rank.processPlayerRatings(
+                meta,
+                gamestate.players,
+                gamestate.teams,
+                storedPlayerRatings
+            );
+            await rank.processTeamRatings(
+                meta,
+                gamestate.players,
+                gamestate.teams,
+                storedPlayerRatings
+            );
             await room.updateLeaderboard(game_slug, gamestate.players);
 
-            rabbitmq.publish('ws', 'onStatsUpdate', { type: 'rankings', room_slug, payload: gamestate.players });
+            rabbitmq.publish("ws", "onStatsUpdate", {
+                type: "rankings",
+                room_slug,
+                payload: gamestate.players,
+            });
 
             let notifyInfo = [];
             for (let shortid in gamestate.players) {
@@ -113,14 +121,20 @@ async function onGameover(meta, gamestate) {
                     name: player.name,
                     rank: player.rank,
                     score: player.score,
-                    rating: player.rating
-                })
+                    rating: player.rating,
+                });
             }
             let gameinfo = await room.getGameInfo(game_slug);
 
-            rabbitmq.publishQueue('notifyDiscord', { 'type': 'gameover', users: notifyInfo, game_slug, room_slug, game_title: (gameinfo?.name || game_slug), thumbnail: (gameinfo?.preview_images || '') })
-        }
-        catch (e) {
+            rabbitmq.publishQueue("notifyDiscord", {
+                type: "gameover",
+                users: notifyInfo,
+                game_slug,
+                room_slug,
+                game_title: gameinfo?.name || game_slug,
+                thumbnail: gameinfo?.preview_images || "",
+            });
+        } catch (e) {
             console.error(e);
         }
     }
