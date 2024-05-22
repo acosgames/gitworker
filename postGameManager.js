@@ -94,24 +94,29 @@ async function onGameover(meta, gamestate) {
     if (meta.maxplayers > 1) {
         try {
             let storedPlayerRatings = {};
-            await rank.processPlayerRatings(
+            let playerRatings = await rank.processPlayerRatings(
                 meta,
                 gamestate.players,
                 gamestate.teams,
                 storedPlayerRatings
             );
-            await rank.processTeamRatings(
+            let teamRatings = await rank.processTeamRatings(
                 meta,
                 gamestate.players,
                 gamestate.teams,
                 storedPlayerRatings
             );
+
+            let ratings = null;
+            if (teamRatings) ratings = teamRatings;
+            else ratings = playerRatings;
+
             await room.updateLeaderboard(game_slug, gamestate.players);
 
             rabbitmq.publish("ws", "onStatsUpdate", {
                 type: "rankings",
                 room_slug,
-                payload: gamestate.players,
+                payload: ratings,
             });
 
             let notifyInfo = [];

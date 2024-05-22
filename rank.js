@@ -115,7 +115,7 @@ class Rank {
         let rankOther = [];
         let playerList = Object.keys(players);
         let teamList = Object.keys(teams || {});
-        if (teamList.length > 0) return;
+        if (teamList.length > 0) return null;
 
         let roomRatings = await room.findPlayerRatings(playerList, game_slug);
         if (roomRatings && roomRatings.length > 0) {
@@ -142,7 +142,7 @@ class Rank {
                         player.name +
                         ") is missing rank"
                 );
-                return;
+                return null;
             }
 
             let playerRating = storedPlayerRatings[shortid];
@@ -172,7 +172,7 @@ class Rank {
                         player.name +
                         ") is missing rank"
                 );
-                return;
+                return null;
             }
 
             if (player.rank == lowestRank) {
@@ -219,10 +219,10 @@ class Rank {
             //UPDATE PLAYER data sent back, using private fields to hide the win/loss/tie/played counts from others
             player.rating = rating.rating;
             // player.ratingTxt = game.ratingToRank(rating.rating);
-            player._win = rating.win;
-            player._loss = rating.loss;
-            player._tie = rating.tie;
-            player._played = rating.played;
+            player.win = rating.win;
+            player.loss = rating.loss;
+            player.tie = rating.tie;
+            player.played = rating.played;
 
             ratingsList.push({
                 shortid: shortid,
@@ -259,7 +259,7 @@ class Rank {
         let rankOther = [];
         let playerList = Object.keys(players);
         let teamList = Object.keys(teams || {});
-        if (teamList.length == 0) return;
+        if (teamList.length == 0) return null;
 
         let roomRatings = await room.findPlayerRatings(playerList, game_slug);
         if (roomRatings && roomRatings.length > 0) {
@@ -286,7 +286,7 @@ class Rank {
                         player.name +
                         ") is missing rank"
                 );
-                return;
+                return null;
             }
 
             let playerRating = storedPlayerRatings[shortid];
@@ -312,7 +312,7 @@ class Rank {
                 console.error(
                     "Team [" + shortid + "] (" + team.name + ") is missing rank"
                 );
-                return;
+                return null;
             }
 
             if (team.rank == lowestRank) {
@@ -374,10 +374,10 @@ class Rank {
             //UPDATE PLAYER data sent back, using private fields to hide the win/loss/tie/played counts from others
             player.rating = rating.rating;
             // player.ratingTxt = game.ratingToRank(rating.rating);
-            player._win = rating.win;
-            player._loss = rating.loss;
-            player._tie = rating.tie;
-            player._played = rating.played;
+            player.win = rating.win;
+            player.loss = rating.loss;
+            player.tie = rating.tie;
+            player.played = rating.played;
 
             ratingsList.push({
                 shortid: shortid,
