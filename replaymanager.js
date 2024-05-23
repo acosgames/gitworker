@@ -1,18 +1,16 @@
-
-const credutil = require('shared/util/credentials');
+const credutil = require("shared/util/credentials");
 const credentials = credutil();
-const redis = require('shared/services/redis');
-const rabbitmq = require('shared/services/rabbitmq');
+const redis = require("shared/services/redis");
+const rabbitmq = require("shared/services/rabbitmq");
 const mimetypes = require("shared/util/mimetypes.json");
 const zlib = require("zlib");
 
-const storage = require('./storage');
+const storage = require("./storage");
 // import { encode } from 'acos-json-encoder';
-const { encode } = require('acos-json-encoder');
+const { encode } = require("acos-json-encoder");
 
 // let ACOSDictionary = require('shared/model/acos-dictionary.json');
 // createDefaultDict(ACOSDictionary)
-
 
 // const BackBlazeService = require("./BackBlazeService");
 // const s3 = new BackBlazeService();
@@ -20,13 +18,12 @@ const { encode } = require('acos-json-encoder');
 const ObjectStorageService = require("shared/services/objectstorage");
 const s3 = new ObjectStorageService();
 
-const room = require('shared/services/room');
+const room = require("shared/services/room");
 
 const MIN_UPDATES_REQUIRED = 1;
 
-
 function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function run() {
@@ -35,20 +32,21 @@ async function run() {
         await sleep(1000);
     }
 
-
     console.log("NODE_APP_INSTANCE = ", process.env.NODE_APP_INSTANCE);
 
     setTimeout(async () => {
-
-        let qWS = await rabbitmq.findExistingQueue('replayManager');;
+        let qWS = await rabbitmq.findExistingQueue("replayManager");
         await rabbitmq.subscribeQueue(qWS, onRoomUpdate);
 
         setTimeout(async () => {
-
-            let queueKey = await rabbitmq.subscribe('ws', 'onRoomUpdate', onRoomUpdate, qWS);
-        }, 100)
-    }, 100)
-
+            let queueKey = await rabbitmq.subscribe(
+                "ws",
+                "onRoomUpdate",
+                onRoomUpdate,
+                qWS
+            );
+        }, 100);
+    }, 100);
 }
 
 let replays = {};
@@ -57,15 +55,16 @@ let roomMetas = {};
 async function onRoomUpdate(msg) {
     // profiler.StartTime('onRoomUpdate');
     let room_slug = msg.room_slug;
-    if (!room_slug)
-        return true;
+    if (!room_slug) return true;
 
-    if (process.env.NODE_ENV == 'localhost' || process.env.NODE_ENV == 'mobile') {
+    if (
+        process.env.NODE_ENV == "localhost" ||
+        process.env.NODE_ENV == "mobile"
+    ) {
         //return true;
     }
 
     try {
-
         let roomMeta = null;
         let history = replays[room_slug];
         if (!history) {
@@ -90,13 +89,12 @@ async function onRoomUpdate(msg) {
 
         // storage.setRoomState(room_slug, gamestate);
 
-
         // if (hiddenPlayers)
         // {
 
         // }
 
-        if (copy.type == 'noshow' || copy.type == 'error') {
+        if (copy.type == "noshow" || copy.type == "error") {
             if (replays[room_slug]) {
                 delete replays[room_slug];
                 delete roomMetas[room_slug];
@@ -104,23 +102,24 @@ async function onRoomUpdate(msg) {
             }
         }
 
-        if (copy.type == 'join') {
-            roomMetas[room_slug] = roomMeta || await storage.getRoomMeta(room_slug);
+        if (copy.type == "join") {
+            roomMetas[room_slug] =
+                roomMeta || (await storage.getRoomMeta(room_slug));
         }
 
-        history.push(copy)
+        history.push(copy);
 
-        if (copy.type == 'gameover') {
-
+        if (copy.type == "gameover") {
             try {
-
-                if (roomMetas[room_slug].mode != 'rank') {
+                if (roomMetas[room_slug].mode != "rank") {
                     delete replays[room_slug];
                     delete roomMetas[room_slug];
-                    console.warn('Replays only created for RANK modes: ' + room_slug, roomMetas[room_slug].mode);
+                    console.warn(
+                        "Replays only created for RANK modes: " + room_slug,
+                        roomMetas[room_slug].mode
+                    );
                     return;
                 }
-
 
                 await saveReplay(room_slug);
 
@@ -128,8 +127,7 @@ async function onRoomUpdate(msg) {
                 delete replays[room_slug];
                 delete roomMetas[room_slug];
                 return true;
-            }
-            catch (e) {
+            } catch (e) {
                 console.error(e);
                 if (replays[room_slug]) {
                     delete replays[room_slug];
@@ -137,7 +135,6 @@ async function onRoomUpdate(msg) {
                     return;
                 }
             }
-
         }
 
         replays[room_slug] = history;
@@ -151,55 +148,55 @@ async function onRoomUpdate(msg) {
         // profiler.EndTime('ActionUpdateLoop');
 
         return true;
-    }
-    catch (e) {
+    } catch (e) {
         console.error(e);
     }
     return false;
 }
 
 async function saveReplay(room_slug) {
-
     return new Promise(async (rs, rj) => {
-
-
-
         let history = replays[room_slug];
         if (!history) {
-            rj(new Error('Missing history' + room_slug));
+            rj(new Error("Missing history" + room_slug));
             return;
         }
 
         if (history.length < MIN_UPDATES_REQUIRED) {
-            rj(new Error('Not enough history for ' + room_slug + ', history count: ' + history.length));
+            rj(
+                new Error(
+                    "Not enough history for " +
+                        room_slug +
+                        ", history count: " +
+                        history.length
+                )
+            );
             return;
         }
 
         let meta = roomMetas[room_slug];
         if (!meta) {
-            rj(new Error('Missing room meta for ' + room_slug));
+            rj(new Error("Missing room meta for " + room_slug));
             return;
         }
 
-
-        let encoded = JSON.stringify(history);//encode(history);
+        let encoded = JSON.stringify(history); //encode(history);
 
         // const finalBuffer = Buffer.from(encoded);
         // const base64String = finalBuffer.toString('base64');
         // let json = `"${base64String}"`
 
-
         try {
-            let json = `${encoded}`
-            var buf = Buffer.from(json, 'utf8');
+            let json = `${encoded}`;
+            var buf = Buffer.from(json, "utf8");
 
-            let filename = `${Date.now()}.json`;
-            let Key = `g/${meta.game_slug}/replays/${meta.mode}.${meta.version}.${filename}`
-            let ContentType = mimetypes['.json'] || 'application/octet-stream'
-            let ACL = 'public-read'
+            let filename = `${room_slug}.json`;
+            let Key = `g/${meta.game_slug}/replays/${filename}`;
+            let ContentType = mimetypes[".json"] || "application/octet-stream";
+            let ACL = "public-read";
 
             let params = {
-                Bucket: 'acospub',
+                Bucket: "acospub",
                 Key,
                 Body: buf,
                 ContentType,
@@ -207,24 +204,22 @@ async function saveReplay(room_slug) {
             };
 
             console.log("S3 Uploading:", Key);
-            let uploader = await s3.upload(params)
+            let uploader = await s3.upload(params);
             let data = await uploader.promise();
             console.log("Upload finished: ", data);
 
             delete replays[room_slug];
             delete roomMetas[room_slug];
 
-            await room.createRoomReplay(meta.game_slug, meta.version, meta.mode, filename);
+            // await room.createRoomReplay(meta.game_slug, meta.version, meta.mode, filename);
 
             // console.log(buffer.toString('base64'));
             console.log("Created Replay at: ", Key);
             rs(Key);
-        }
-        catch (e) {
+        } catch (e) {
             rj(e);
         }
-
-    })
+    });
 }
 
 run();

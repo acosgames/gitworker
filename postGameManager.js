@@ -113,6 +113,9 @@ async function onGameover(meta, gamestate) {
 
             await room.updateLeaderboard(game_slug, gamestate.players);
 
+            await room.updatePlayerRoom(room_slug, gamestate, ratings);
+
+            await room.updatePlayerStats(meta, gamestate);
             rabbitmq.publish("ws", "onStatsUpdate", {
                 type: "rankings",
                 room_slug,

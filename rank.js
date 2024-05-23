@@ -187,13 +187,16 @@ class Rank {
             isTied = true;
             for (var playerRating of rankOne) {
                 playerRating.tie++;
+                playerRating.winloss = 0;
             }
         } else {
             for (var playerRating of rankOne) {
                 playerRating.win++;
+                playerRating.winloss = 1;
             }
             for (var playerRating of rankOther) {
                 playerRating.loss++;
+                playerRating.winloss = -1;
             }
         }
 
@@ -233,13 +236,14 @@ class Rank {
                 win: rating.win,
                 tie: rating.tie,
                 loss: rating.loss,
+                winloss: rating.winloss,
                 highscore: rating.score || 0,
             });
 
             delete rating["rank"];
             delete rating["score"];
 
-            setPlayerRating(shortid, meta.game_slug, rating);
+            // setPlayerRating(shortid, meta.game_slug, rating);
         }
 
         room.updateAllPlayerRatings(ratingsList);
@@ -331,6 +335,7 @@ class Rank {
                     let shortid = team.players[i];
                     let playerRating = storedPlayerRatings[shortid];
                     playerRating.tie++;
+                    playerRating.winloss = 0;
                 }
             }
         } else {
@@ -340,6 +345,7 @@ class Rank {
                     let shortid = team.players[i];
                     let playerRating = storedPlayerRatings[shortid];
                     playerRating.win++;
+                    playerRating.winloss = 1;
                 }
             }
             for (var shortid of rankOther) {
@@ -348,6 +354,7 @@ class Rank {
                     let shortid = team.players[i];
                     let playerRating = storedPlayerRatings[shortid];
                     playerRating.loss++;
+                    playerRating.winloss = -1;
                 }
             }
         }
@@ -388,13 +395,14 @@ class Rank {
                 win: rating.win,
                 tie: rating.tie,
                 loss: rating.loss,
+                winloss: rating.winloss,
                 highscore: rating.score || 0,
             });
 
             delete rating["rank"];
             delete rating["score"];
 
-            setPlayerRating(shortid, meta.game_slug, rating);
+            // setPlayerRating(shortid, meta.game_slug, rating);
         }
 
         room.updateAllPlayerRatings(ratingsList);
