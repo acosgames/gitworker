@@ -104,7 +104,10 @@ class Rank {
             room.updateAllPlayerHighscores(highScoreList, meta.maxplayers == 1);
     }
 
-    async processPlayerRatings(meta, players, teams, storedPlayerRatings) {
+    async processPlayerRatings(meta, gamestate, storedPlayerRatings) {
+        let players = gamestate.players;
+        let teams = gamestate.teams;
+
         const game_slug = meta?.game_slug;
         const room_slug = meta?.room_slug;
 
@@ -117,7 +120,11 @@ class Rank {
         let teamList = Object.keys(teams || {});
         if (teamList.length > 0) return null;
 
-        let roomRatings = await room.findPlayerRatings(playerList, game_slug);
+        let roomRatings = await room.findPlayerRatings(
+            playerList,
+            meta,
+            game_slug
+        );
         if (roomRatings && roomRatings.length > 0) {
             for (var i = 0; i < roomRatings.length; i++) {
                 let roomRating = roomRatings[i];
@@ -131,6 +138,7 @@ class Rank {
             if (!(shortid in storedPlayerRatings)) {
                 storedPlayerRatings[shortid] = await room.findPlayerRating(
                     shortid,
+                    meta,
                     game_slug
                 );
             }
@@ -209,6 +217,10 @@ class Rank {
 
         let notifyInfo = [];
 
+        let totalTime = Math.floor(
+            (gamestate.room.endtime - gamestate.room.starttime) / 1000
+        );
+
         for (var shortid in players) {
             let player = players[shortid];
 
@@ -226,6 +238,8 @@ class Rank {
             player.loss = rating.loss;
             player.tie = rating.tie;
             player.played = rating.played;
+            player.winloss = rating.winloss;
+            player.playtime = rating.playtime + totalTime;
 
             ratingsList.push({
                 shortid: shortid,
@@ -238,6 +252,7 @@ class Rank {
                 loss: rating.loss,
                 winloss: rating.winloss,
                 highscore: rating.score || 0,
+                playtime: rating.playtime + totalTime,
             });
 
             delete rating["rank"];
@@ -252,7 +267,9 @@ class Rank {
         return ratingsList;
     }
 
-    async processTeamRatings(meta, players, teams, storedPlayerRatings) {
+    async processTeamRatings(meta, gamestate, storedPlayerRatings) {
+        let players = gamestate.players;
+        let teams = gamestate.teams;
         const game_slug = meta?.game_slug;
         const room_slug = meta?.room_slug;
 
@@ -265,7 +282,11 @@ class Rank {
         let teamList = Object.keys(teams || {});
         if (teamList.length == 0) return null;
 
-        let roomRatings = await room.findPlayerRatings(playerList, game_slug);
+        let roomRatings = await room.findPlayerRatings(
+            playerList,
+            meta,
+            game_slug
+        );
         if (roomRatings && roomRatings.length > 0) {
             for (var i = 0; i < roomRatings.length; i++) {
                 let roomRating = roomRatings[i];
@@ -279,6 +300,7 @@ class Rank {
             if (!(shortid in storedPlayerRatings)) {
                 storedPlayerRatings[shortid] = await room.findPlayerRating(
                     shortid,
+                    meta,
                     game_slug
                 );
             }
@@ -368,6 +390,10 @@ class Rank {
 
         let notifyInfo = [];
 
+        let totalTime = Math.floor(
+            (gamestate.room.endtime - gamestate.room.starttime) / 1000
+        );
+
         for (var shortid in players) {
             let player = players[shortid];
 
@@ -385,6 +411,8 @@ class Rank {
             player.loss = rating.loss;
             player.tie = rating.tie;
             player.played = rating.played;
+            player.winloss = rating.winloss;
+            player.totalTime = rating.playtime + totalTime;
 
             ratingsList.push({
                 shortid: shortid,
@@ -397,6 +425,7 @@ class Rank {
                 loss: rating.loss,
                 winloss: rating.winloss,
                 highscore: rating.score || 0,
+                playtime: rating.playtime + totalTime,
             });
 
             delete rating["rank"];

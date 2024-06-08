@@ -96,14 +96,12 @@ async function onGameover(meta, gamestate) {
             let storedPlayerRatings = {};
             let playerRatings = await rank.processPlayerRatings(
                 meta,
-                gamestate.players,
-                gamestate.teams,
+                gamestate,
                 storedPlayerRatings
             );
             let teamRatings = await rank.processTeamRatings(
                 meta,
-                gamestate.players,
-                gamestate.teams,
+                gamestate,
                 storedPlayerRatings
             );
 
@@ -121,6 +119,8 @@ async function onGameover(meta, gamestate) {
                 room_slug,
                 payload: ratings,
             });
+
+            await room.updatePlayerAchievements(meta, gamestate);
 
             let notifyInfo = [];
             for (let shortid in gamestate.players) {
