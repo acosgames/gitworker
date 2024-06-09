@@ -120,7 +120,16 @@ async function onGameover(meta, gamestate) {
                 payload: ratings,
             });
 
-            await room.updatePlayerAchievements(meta, gamestate);
+            let playerAchievements = await room.updatePlayerAchievements(
+                meta,
+                gamestate
+            );
+            rabbitmq.publish("ws", "onAchievementsUpdate", {
+                type: "rankings",
+                room_slug,
+                game_slug,
+                payload: playerAchievements,
+            });
 
             let notifyInfo = [];
             for (let shortid in gamestate.players) {
