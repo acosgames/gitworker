@@ -39,12 +39,7 @@ async function run() {
         await rabbitmq.subscribeQueue(qWS, onRoomUpdate);
 
         setTimeout(async () => {
-            let queueKey = await rabbitmq.subscribe(
-                "ws",
-                "onRoomUpdate",
-                onRoomUpdate,
-                qWS
-            );
+            let queueKey = await rabbitmq.subscribe("ws", "onRoomUpdate", onRoomUpdate, qWS);
         }, 100);
     }, 100);
 }
@@ -57,10 +52,7 @@ async function onRoomUpdate(msg) {
     let room_slug = msg.room_slug;
     if (!room_slug) return true;
 
-    if (
-        process.env.NODE_ENV == "localhost" ||
-        process.env.NODE_ENV == "mobile"
-    ) {
+    if (process.env.NODE_ENV == "localhost" || process.env.NODE_ENV == "mobile") {
         //return true;
     }
 
@@ -103,8 +95,7 @@ async function onRoomUpdate(msg) {
         }
 
         if (copy.type == "join") {
-            roomMetas[room_slug] =
-                roomMeta || (await storage.getRoomMeta(room_slug));
+            roomMetas[room_slug] = roomMeta || (await storage.getRoomMeta(room_slug));
         }
 
         history.push(copy);
@@ -165,10 +156,7 @@ async function saveReplay(room_slug) {
         if (history.length < MIN_UPDATES_REQUIRED) {
             rj(
                 new Error(
-                    "Not enough history for " +
-                        room_slug +
-                        ", history count: " +
-                        history.length
+                    "Not enough history for " + room_slug + ", history count: " + history.length
                 )
             );
             return;

@@ -1,27 +1,27 @@
 {
-  "name": "gitworker",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev-gitwebhook": "pm2 start gitwebhook.js --name gitwebhook --node-args=\"--inspect=10004\" --watch \". ../shared\" --ignore-watch \"package.json node_modules\""
-  },
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "nodemon": "^3.0.1"
-  },
-  "dependencies": {
-    "@discordjs/rest": "^0.3.0",
-    "acos-json-delta": "^1.0.4",
-    "acos-json-encoder": "^1.0.2",
-    "aws-sdk": "^2.1204.0",
-    "discord-api-types": "^0.30.0",
-    "discord.js": "^13.6.0",
-    "github-webhook-handler": "^1.0.0",
-    "openskill": "^3.1.0",
-    "shared": "file:../shared",
-    "smee-client": "^1.2.2"
-  }
+    "name": "gitworker",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "dev-gitwebhook": "pm2 start gitwebhook.js --name gitwebhook --node-args=\"--inspect=10004\" --watch \". ../shared\" --ignore-watch \"package.json node_modules\""
+    },
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "nodemon": "^3.0.1"
+    },
+    "dependencies": {
+        "@discordjs/rest": "^0.3.0",
+        "acos-json-delta": "^1.0.4",
+        "acos-json-encoder": "^1.0.15",
+        "aws-sdk": "^2.1204.0",
+        "discord-api-types": "^0.30.0",
+        "discord.js": "^13.6.0",
+        "github-webhook-handler": "^1.0.0",
+        "openskill": "^3.1.0",
+        "shared": "file:../shared",
+        "smee-client": "^1.2.2"
+    }
 }

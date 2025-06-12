@@ -9,7 +9,9 @@ const rank = require("./rank");
 const ObjectStorageService = require("shared/services/objectstorage");
 const s3 = new ObjectStorageService();
 
+const achievements = require("shared/services/achievements");
 const room = require("shared/services/room");
+const stats = require("shared/services/stats");
 
 const MIN_UPDATES_REQUIRED = 1;
 
@@ -113,17 +115,15 @@ async function onGameover(meta, gamestate) {
 
             await room.updatePlayerRoom(room_slug, gamestate, ratings);
 
-            await room.updatePlayerStats(meta, gamestate);
+            await stats.updatePlayerStats(meta, gamestate);
             rabbitmq.publish("ws", "onStatsUpdate", {
                 type: "rankings",
                 room_slug,
                 payload: ratings,
             });
 
-            let playerAchievements = await room.updatePlayerAchievements(
-                meta,
-                gamestate
-            );
+            let playerAchievements =
+                await achievements.updatePlayerAchievements(meta, gamestate);
             rabbitmq.publish("ws", "onAchievementsUpdate", {
                 type: "rankings",
                 room_slug,
