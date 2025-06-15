@@ -32,12 +32,7 @@ async function run() {
         await rabbitmq.subscribeQueue(qWS, onRoomGameover);
 
         setTimeout(async () => {
-            let queueKey = await rabbitmq.subscribe(
-                "ws",
-                "onRoomGameover",
-                onRoomGameover,
-                qWS
-            );
+            let queueKey = await rabbitmq.subscribe("ws", "onRoomGameover", onRoomGameover, qWS);
         }, 100);
     }, 100);
 }
@@ -53,10 +48,7 @@ async function onRoomGameover(msg) {
     let gamestate = msg.payload;
     if (!room_slug) return true;
 
-    if (
-        process.env.NODE_ENV == "localhost" ||
-        process.env.NODE_ENV == "mobile"
-    ) {
+    if (process.env.NODE_ENV == "localhost" || process.env.NODE_ENV == "mobile") {
         //return true;
     }
 
@@ -93,19 +85,12 @@ async function onGameover(meta, gamestate) {
     let game_slug = meta.game_slug;
     let room_slug = meta.room_slug;
 
+    let storedPlayerRatings = {};
+    let playerRatings = await rank.processPlayerRatings(meta, gamestate, storedPlayerRatings);
+
     if (meta.maxplayers > 1) {
         try {
-            let storedPlayerRatings = {};
-            let playerRatings = await rank.processPlayerRatings(
-                meta,
-                gamestate,
-                storedPlayerRatings
-            );
-            let teamRatings = await rank.processTeamRatings(
-                meta,
-                gamestate,
-                storedPlayerRatings
-            );
+            let teamRatings = await rank.processTeamRatings(meta, gamestate, storedPlayerRatings);
 
             let ratings = null;
             if (teamRatings) ratings = teamRatings;
@@ -122,8 +107,7 @@ async function onGameover(meta, gamestate) {
                 payload: ratings,
             });
 
-            let playerAchievements =
-                await achievements.updatePlayerAchievements(meta, gamestate);
+            let playerAchievements = await achievements.updatePlayerAchievements(meta, gamestate);
             rabbitmq.publish("ws", "onAchievementsUpdate", {
                 type: "rankings",
                 room_slug,
@@ -165,11 +149,11 @@ async function onGameover(meta, gamestate) {
     //         }
     //     }
 
-    //     if (meta.lbscore || meta.maxplayers == 1) {
-    //         console.log("Updating high scores: ", gamestate.players);
-    //         await rank.processPlayerHighscores(meta, gamestate.players, storedPlayerRatings);
-    //         await room.updateLeaderboardHighscore(meta.game_slug, gamestate.players);
-    //     }
+    if (meta.lbscore || meta.maxplayers == 1) {
+        console.log("Updating high scores: ", gamestate.players);
+        await rank.processPlayerHighscores(meta, gamestate.players, storedPlayerRatings);
+        await room.updateLeaderboardHighscore(meta.game_slug, gamestate.players);
+    }
     // }
 }
 
