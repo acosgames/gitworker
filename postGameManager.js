@@ -9,6 +9,7 @@ const rank = require("./rank");
 const ObjectStorageService = require("shared/services/objectstorage");
 const s3 = new ObjectStorageService();
 
+const leaderboard = require("shared/services/leaderboard");
 const achievements = require("shared/services/achievements");
 const room = require("shared/services/room");
 const stats = require("shared/services/stats");
@@ -85,35 +86,18 @@ async function onGameover(meta, gamestate) {
     let game_slug = meta.game_slug;
     let room_slug = meta.room_slug;
 
+    let ratings = [];
     let storedPlayerRatings = {};
-    let playerRatings = await rank.processPlayerRatings(meta, gamestate, storedPlayerRatings);
-
     if (meta.maxplayers > 1) {
         try {
-            let teamRatings = await rank.processTeamRatings(meta, gamestate, storedPlayerRatings);
+            if (gamestate.teams && Object.keys(gamestate.teams).length > 0)
+                ratings = await rank.processTeamRatings(meta, gamestate, storedPlayerRatings);
+            else ratings = await rank.processPlayerRatings(meta, gamestate, storedPlayerRatings);
 
-            let ratings = null;
-            if (teamRatings) ratings = teamRatings;
-            else ratings = playerRatings;
+            let config = { game_slug, room_slug, type: "rank", season: meta.season };
 
-            await room.updateLeaderboard(game_slug, gamestate.players);
-
+            await leaderboard.updateLeaderboard(game_slug, gamestate.players);
             await room.updatePlayerRoom(room_slug, gamestate, ratings);
-
-            await stats.updatePlayerStats(meta, gamestate);
-            rabbitmq.publish("ws", "onStatsUpdate", {
-                type: "rankings",
-                room_slug,
-                payload: ratings,
-            });
-
-            let playerAchievements = await achievements.updatePlayerAchievements(meta, gamestate);
-            rabbitmq.publish("ws", "onAchievementsUpdate", {
-                type: "rankings",
-                room_slug,
-                game_slug,
-                payload: playerAchievements,
-            });
 
             let notifyInfo = [];
             for (let shortid in gamestate.players) {
@@ -140,6 +124,25 @@ async function onGameover(meta, gamestate) {
         }
     }
 
+    try {
+        await stats.updatePlayerStats(meta, gamestate);
+        rabbitmq.publish("ws", "onStatsUpdate", {
+            type: "rankings",
+            room_slug,
+            payload: ratings,
+        });
+
+        let playerAchievements = await achievements.updatePlayerAchievements(meta, gamestate);
+        rabbitmq.publish("ws", "onAchievementsUpdate", {
+            type: "rankings",
+            room_slug,
+            game_slug,
+            payload: playerAchievements,
+        });
+    } catch (e) {
+        console.error(e);
+    }
+
     // if (room.getGameModeName(meta.mode) == 'rank' || meta.mode == 'rank') {
     //     let storedPlayerRatings = {};
     //     if (gamestate?.timer?.sequence > 2) {
@@ -148,11 +151,14 @@ async function onGameover(meta, gamestate) {
     //             await room.updateLeaderboard(meta.game_slug, gamestate.players);
     //         }
     //     }
-
-    if (meta.lbscore || meta.maxplayers == 1) {
-        console.log("Updating high scores: ", gamestate.players);
-        await rank.processPlayerHighscores(meta, gamestate.players, storedPlayerRatings);
-        await room.updateLeaderboardHighscore(meta.game_slug, gamestate.players);
+    try {
+        if (meta.lbscore || meta.maxplayers == 1) {
+            console.log("Updating high scores: ", gamestate.players);
+            await rank.processPlayerHighscores(meta, gamestate.players, storedPlayerRatings);
+            await room.updateLeaderboardHighscore(meta.game_slug, gamestate.players);
+        }
+    } catch (e) {
+        console.error(e);
     }
     // }
 }

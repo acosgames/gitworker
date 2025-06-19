@@ -33,7 +33,11 @@ class Rank {
             let player = players[shortid];
 
             if (!(shortid in storedPlayerRatings)) {
-                storedPlayerRatings[shortid] = await room.findPlayerRating(shortid, meta.game_slug);
+                storedPlayerRatings[shortid] = await room.findPlayerRating(
+                    shortid,
+                    meta,
+                    game_slug
+                );
             }
             if (typeof player.score === "undefined") {
                 console.error("Player [" + shortid + "] (" + player.name + ") is missing score");
@@ -173,7 +177,7 @@ class Rank {
 
         // console.log("Before Rating: ", playerRatings);
         //run OpenSkill rating system
-        this.calculateRanks(playerRatings, teams);
+        if (meta.maxplayers > 1) this.calculateRanks(playerRatings, teams);
 
         //update player ratings from openskill mutation of playerRatings
         let ratingsList = [];
