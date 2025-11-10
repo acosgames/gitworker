@@ -3,14 +3,14 @@ var createHandler = require("github-webhook-handler");
 var handler = createHandler({ path: "/gitworker", secret: "XyNmjfdmVpNw7RRt" });
 const SmeeClient = require("smee-client");
 
-const person = require("shared/services/person");
+const person = require('shared/services/person');
 // const person = new PersonService();
-const DevGameService = require("shared/services/devgame");
+const DevGameService = require('shared/services/devgame');
 const devgame = new DevGameService();
-const credutil = require("shared/util/credentials");
+const credutil = require('shared/util/credentials');
 const credentials = credutil();
 
-const gh = require("shared/services/github");
+const gh = require('shared/services/github');
 var port = process.env.PORT || credentials.platform.gitworker.port;
 const NODE_ENV = process.env.NODE_ENV;
 

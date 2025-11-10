@@ -1,18 +1,18 @@
-const credutil = require("shared/util/credentials");
+const credutil = require('shared/util/credentials');
 const credentials = credutil();
-const redis = require("shared/services/redis");
-const rabbitmq = require("shared/services/rabbitmq");
+const redis = require('shared/services/redis');
+const rabbitmq = require('shared/services/rabbitmq');
 const storage = require("./storage");
 
 const rank = require("./rank");
 
-const ObjectStorageService = require("shared/services/objectstorage");
+const ObjectStorageService = require('shared/services/objectstorage');
 const s3 = new ObjectStorageService();
 
-const leaderboard = require("shared/services/leaderboard");
-const achievements = require("shared/services/achievements");
-const room = require("shared/services/room");
-const stats = require("shared/services/stats");
+const leaderboard = require('shared/services/leaderboard');
+const achievements = require('shared/services/achievements');
+const room = require('shared/services/room');
+const stats = require('shared/services/stats');
 
 const MIN_UPDATES_REQUIRED = 1;
 
