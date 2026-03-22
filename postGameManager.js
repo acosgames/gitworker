@@ -96,7 +96,7 @@ async function onGameover(meta, gamestate) {
 
             let config = { game_slug, room_slug, type: "rank", season: meta.season };
 
-            await leaderboard.updateLeaderboard(game_slug, gamestate.players);
+            await leaderboard.updateLeaderboard(config, gamestate.players);
             await room.updatePlayerRoom(room_slug, gamestate, ratings);
 
             let notifyInfo = [];
