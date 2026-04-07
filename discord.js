@@ -1,12 +1,12 @@
 
-const credutil = require('shared/util/credentials');
+const credutil = require('shared/util/credentials.js');
 const credentials = credutil();
-const redis = require('shared/services/redis');
-const rabbitmq = require('shared/services/rabbitmq');
+const redis = require('shared/services/redis.js');
+const rabbitmq = require('shared/services/rabbitmq.js');
 
 // Require the necessary discord.js classes
 const { Client, Intents, MessageEmbed } = require('discord.js');
-const ratingconfig = require('shared/util/ratingconfig');
+const ratingconfig = require('shared/util/ratingconfig.js');
 
 // Create a new client instance
 const client = new Client({ intents: [Intents.FLAGS.GUILDS] });

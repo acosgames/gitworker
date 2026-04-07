@@ -1,7 +1,7 @@
-const credutil = require('shared/util/credentials');
+const credutil = require('shared/util/credentials.js');
 const credentials = credutil();
-const redis = require('shared/services/redis');
-const rabbitmq = require('shared/services/rabbitmq');
+const redis = require('shared/services/redis.js');
+const rabbitmq = require('shared/services/rabbitmq.js');
 const mimetypes = require('shared/util/mimetypes.json');
 const zlib = require("zlib");
 
@@ -15,10 +15,10 @@ const { encode } = require("acos-json-encoder");
 // const BackBlazeService = require("./BackBlazeService");
 // const s3 = new BackBlazeService();
 
-const ObjectStorageService = require('shared/services/objectstorage');
+const ObjectStorageService = require('shared/services/objectstorage.js');
 const s3 = new ObjectStorageService();
 
-const room = require('shared/services/room');
+const room = require('shared/services/room.js');
 
 const MIN_UPDATES_REQUIRED = 1;
 
