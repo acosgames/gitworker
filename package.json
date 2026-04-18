@@ -2,15 +2,22 @@
     "name": "gitworker",
     "version": "1.0.0",
     "description": "",
-    "main": "index.js",
+    "type": "module",
+    "main": "dist/index.js",
     "scripts": {
+        "start": "concurrently -n tsc,node \"npm:build:watch\" \"npm:start:watch\"",
+        "build": "tsc -p tsconfig.json ",
+        "build:watch": "tsc -p tsconfig.json --noCheck --watch --preserveWatchOutput",
+        "start:watch": "node --inspect=9943 --watch --enable-source-maps --watch-preserve-output dist/index.js",
         "test": "echo \"Error: no test specified\" && exit 1",
-        "dev-gitwebhook": "pm2 start gitwebhook.js --name gitwebhook --node-args=\"--inspect=10004\" --watch \". ../shared\" --ignore-watch \"package.json node_modules\""
+        "dev-gitwebhook": "pm2 start dist/gitwebhook.js --name gitwebhook --node-args=\"--inspect=10004\" --watch \"dist ../shared\" --ignore-watch \"package.json node_modules\""
     },
     "author": "",
     "license": "ISC",
     "devDependencies": {
-        "nodemon": "^3.0.1"
+        "nodemon": "^3.0.1",
+        "typescript": "^5.9.3",
+        "@types/node": "^20.19.39"
     },
     "dependencies": {
         "@discordjs/rest": "^0.3.0",

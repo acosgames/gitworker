@@ -1,20 +1,18 @@
 
-const credutil = require('shared/util/credentials')
-const { utcDATETIME } = require('shared/util/datefns.js');
-
+// @ts-nocheck
+import credutil from "shared/util/credentials.js";
+import { utcDATETIME } from "shared/util/datefns.js";
 // const UploadFile = require('./uploadfile');
 // const upload = new UploadFile();
 
 
-const AWS = require('aws-sdk');
-const fs = require('fs');
-const zlib = require("zlib");
-const { rejects } = require('assert');
+import AWS from "aws-sdk";
+import fs from "fs";
+import zlib from "zlib";
+import { rejects } from "assert";
+import { Readable } from "stream";
 
-const { Readable } = require('stream');
-
-
-module.exports = class BackBlazeService {
+export default class BackBlazeService {
 
     constructor(credentials) {
         this.credentials = credentials || credutil();

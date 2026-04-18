@@ -1,8 +1,6 @@
-const cache = require('shared/services/cache.js');
-const r = require('shared/services/room.js');
-
-const delta = require("acos-json-delta");
-
+import cache from 'shared/services/cache.js';
+import r from 'shared/services/room.js';
+import delta from "acos-json-delta";
 class Storage {
     constructor() {
         this.users = {};
@@ -149,4 +147,4 @@ class Storage {
     }
 }
 
-module.exports = new Storage();
+export default new Storage();

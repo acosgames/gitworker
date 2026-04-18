@@ -1,9 +1,10 @@
+// @ts-nocheck
 
 
-require('./gitwebhook');
-require('./discord');
-require('./replaymanager');
-require('./postGameManager');
+import './gitwebhook.js';
+import './discord.js';
+import './replaymanager.js';
+import './postGameManager.js';
 
 console.log("STARTING GITWORKER!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
@@ -37,7 +38,7 @@ process.on('unhandledRejection', (reason, promise) => {
 })
 
 process.on('message', function (msg) {
-    if (msg == 'shutdown' || msg.type == 'shutdown') {
+    if (msg == 'shutdown' || (msg && msg.type == 'shutdown')) {
         cleanup();
         console.error('Message Shutdown ', msg)
     }

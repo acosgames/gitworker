@@ -1,104 +1,86 @@
-const credutil = require('shared/util/credentials.js');
+// @ts-nocheck
+import credutil from 'shared/util/credentials.js';
 const credentials = credutil();
-const redis = require('shared/services/redis.js');
-const rabbitmq = require('shared/services/rabbitmq.js');
-const storage = require("./storage");
-
-const rank = require("./rank");
-
-const ObjectStorageService = require('shared/services/objectstorage.js');
+import redis from 'shared/services/redis.js';
+import rabbitmq from 'shared/services/rabbitmq.js';
+import rank from "./rank.js";
+import ObjectStorageService from 'shared/services/objectstorage.js';
 const s3 = new ObjectStorageService();
-
-const leaderboard = require('shared/services/leaderboard.js');
-const achievements = require('shared/services/achievements.js');
-const room = require('shared/services/room.js');
-const stats = require('shared/services/stats.js');
-
+import leaderboard from 'shared/services/leaderboard.js';
+import achievements from 'shared/services/achievements.js';
+import room from 'shared/services/room.js';
+import stats from 'shared/services/stats.js';
 const MIN_UPDATES_REQUIRED = 1;
-
 function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
-
 async function run() {
     while (!rabbitmq.isActive() || !redis.isActive()) {
         console.warn("[GitWorker] waiting on rabbitmq and redis...");
         await sleep(1000);
     }
-
     console.log("NODE_APP_INSTANCE = ", process.env.NODE_APP_INSTANCE);
-
     setTimeout(async () => {
         let qWS = await rabbitmq.findExistingQueue("gameover");
         await rabbitmq.subscribeQueue(qWS, onRoomGameover);
-
         setTimeout(async () => {
             let queueKey = await rabbitmq.subscribe("ws", "onRoomGameover", onRoomGameover, qWS);
         }, 100);
     }, 100);
 }
-
 let replays = {};
 let roomMetas = {};
-
 async function onRoomGameover(msg) {
     // profiler.StartTime('onRoomUpdate');
     let room_slug = msg.room_slug;
     let meta = msg.meta;
     let game_slug = meta.game_slug;
     let gamestate = msg.payload;
-    if (!room_slug) return true;
-
+    if (!room_slug)
+        return true;
     if (process.env.NODE_ENV == "localhost" || process.env.NODE_ENV == "mobile") {
         //return true;
     }
-
     try {
         gamestate = structuredClone(gamestate); // JSON.parse(JSON.stringify(msg));
-
         if (msg.type == "gameover") {
             try {
                 // let meta = await storage.getRoomMeta(room_slug);
-
                 // if (meta.mode != 'rank') {
                 // console.warn('Post Game Manager only created for RANK modes: ' + room_slug, meta.mode);
                 // return true;
                 // }
-
                 onGameover(meta, gamestate);
                 return true;
-            } catch (e) {
+            }
+            catch (e) {
                 console.error(e);
             }
         }
-
         return true;
-    } catch (e) {
+    }
+    catch (e) {
         console.error(e);
     }
     return false;
 }
-
 async function onGameover(meta, gamestate) {
     // console.log("GAMEOVER: ", meta, gamestate)
-    if (!meta || meta.mode != "rank") return;
-
+    if (!meta || meta.mode != "rank")
+        return;
     let game_slug = meta.game_slug;
     let room_slug = meta.room_slug;
-
     let ratings = [];
     let storedPlayerRatings = {};
     if (meta.maxplayers > 1) {
         try {
             if (gamestate.teams && Object.keys(gamestate.teams).length > 0)
                 ratings = await rank.processTeamRatings(meta, gamestate, storedPlayerRatings);
-            else ratings = await rank.processPlayerRatings(meta, gamestate, storedPlayerRatings);
-
+            else
+                ratings = await rank.processPlayerRatings(meta, gamestate, storedPlayerRatings);
             let config = { game_slug, room_slug, type: "rank", season: meta.season };
-
             await leaderboard.updateLeaderboard(config, gamestate.players);
             await room.updatePlayerRoom(room_slug, gamestate, ratings);
-
             let notifyInfo = [];
             for (let shortid in gamestate.players) {
                 let player = gamestate.players[shortid];
@@ -110,7 +92,6 @@ async function onGameover(meta, gamestate) {
                 });
             }
             let gameinfo = await room.getGameInfo(game_slug);
-
             rabbitmq.publishQueue("notifyDiscord", {
                 type: "gameover",
                 users: notifyInfo,
@@ -119,11 +100,11 @@ async function onGameover(meta, gamestate) {
                 game_title: gameinfo?.name || game_slug,
                 thumbnail: gameinfo?.preview_images || "",
             });
-        } catch (e) {
+        }
+        catch (e) {
             console.error(e);
         }
     }
-
     try {
         await stats.updatePlayerStats(meta, gamestate);
         rabbitmq.publish("ws", "onStatsUpdate", {
@@ -131,7 +112,6 @@ async function onGameover(meta, gamestate) {
             room_slug,
             payload: ratings,
         });
-
         let playerAchievements = await achievements.updatePlayerAchievements(meta, gamestate);
         rabbitmq.publish("ws", "onAchievementsUpdate", {
             type: "rankings",
@@ -139,10 +119,10 @@ async function onGameover(meta, gamestate) {
             game_slug,
             payload: playerAchievements,
         });
-    } catch (e) {
+    }
+    catch (e) {
         console.error(e);
     }
-
     // if (room.getGameModeName(meta.mode) == 'rank' || meta.mode == 'rank') {
     //     let storedPlayerRatings = {};
     //     if (gamestate?.timer?.sequence > 2) {
@@ -155,12 +135,13 @@ async function onGameover(meta, gamestate) {
         if (meta.lbscore || meta.maxplayers == 1) {
             console.log("Updating high scores: ", gamestate.players);
             await rank.processPlayerHighscores(meta, gamestate.players, storedPlayerRatings);
-            await room.updateLeaderboardHighscore(meta.game_slug, gamestate.players);
+            await ratings.updateLeaderboardHighscore(meta.game_slug, gamestate.players);
         }
-    } catch (e) {
+    }
+    catch (e) {
         console.error(e);
     }
     // }
 }
-
 run();
+//# sourceMappingURL=postGameManager.js.map
