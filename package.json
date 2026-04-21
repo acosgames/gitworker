@@ -15,14 +15,14 @@
     "author": "",
     "license": "ISC",
     "devDependencies": {
+        "@types/node": "^20.19.39",
         "nodemon": "^3.0.1",
-        "typescript": "^5.9.3",
-        "@types/node": "^20.19.39"
+        "typescript": "^5.9.3"
     },
     "dependencies": {
         "@discordjs/rest": "^0.3.0",
         "acos-json-delta": "^1.0.4",
-        "acos-json-encoder": "^1.0.15",
+        "acos-json-encoder": "^2.0.15",
         "aws-sdk": "^2.1204.0",
         "discord-api-types": "^0.30.0",
         "discord.js": "^13.6.0",

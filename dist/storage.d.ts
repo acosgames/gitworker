@@ -6,7 +6,7 @@ declare class Storage {
     getRoomMeta(room_slug: any): Promise<import("shared/types/room.js").RoomMeta>;
     getRoomState(room_slug: any, shortid: any): Promise<any>;
     setRoomState(room_slug: any, state: any): Promise<void>;
-    getGameInfo(game_slug: any): Promise<unknown>;
+    getGameInfo(game_slug: any): Promise<import("shared/types/game.js").GameInfo>;
     getRoomCounts(room_slug: any): Promise<{
         count: number;
         min: number;

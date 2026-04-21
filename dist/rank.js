@@ -84,15 +84,16 @@ class Rank {
         let teamList = Object.keys(teams || {});
         if (teamList.length > 0)
             return null;
-        let roomRatings = await ratings.findPlayerRatings(playerList, meta, game_slug);
+        let roomRatings = await ratings.findPlayerRatings(playerList.map(p => p.shortid), meta, game_slug);
         if (roomRatings && roomRatings.length > 0) {
             for (var i = 0; i < roomRatings.length; i++) {
                 let roomRating = roomRatings[i];
                 storedPlayerRatings[roomRating.shortid] = roomRating;
             }
         }
-        for (var shortid in players) {
-            let player = players[shortid];
+        for (var player of players) {
+            let shortid = player.shortid;
+            // let player = players[shortid];
             if (!(shortid in storedPlayerRatings)) {
                 storedPlayerRatings[shortid] = await ratings.findPlayerRating(shortid, meta, game_slug);
             }
@@ -153,7 +154,7 @@ class Rank {
         //update player ratings from openskill mutation of playerRatings
         let ratingsList = [];
         let notifyInfo = [];
-        let totalTime = Math.floor((gamestate.room.endtime - gamestate.room.starttime) / 1000);
+        let totalTime = Math.floor((gamestate.room.endtime) / 1000);
         for (var shortid in players) {
             let player = players[shortid];
             if (!(shortid in playerRatings)) {
@@ -198,22 +199,23 @@ class Rank {
         const room_slug = meta?.room_slug;
         //add saved ratings to players in openskill format
         storedPlayerRatings = storedPlayerRatings || {};
-        let playerRatings = {};
+        let playerRatings = [];
         let rankOne = [];
         let rankOther = [];
-        let playerList = Object.keys(players);
-        let teamList = Object.keys(teams || {});
+        let playerList = players; // Object.keys(players);
+        let teamList = teams; //Object.keys(teams || {});
         if (teamList.length == 0)
             return null;
-        let roomRatings = await ratings.findPlayerRatings(playerList, meta, game_slug);
+        let roomRatings = await ratings.findPlayerRatings(playerList.map(p => p.shortid), meta, game_slug);
         if (roomRatings && roomRatings.length > 0) {
             for (var i = 0; i < roomRatings.length; i++) {
                 let roomRating = roomRatings[i];
                 storedPlayerRatings[roomRating.shortid] = roomRating;
             }
         }
-        for (var shortid in players) {
-            let player = players[shortid];
+        for (let i = 0; i < players.length; i++) { //} player of players) {
+            let player = players[i];
+            let shortid = player.shortid;
             if (!(shortid in storedPlayerRatings)) {
                 storedPlayerRatings[shortid] = await ratings.findPlayerRating(shortid, meta, game_slug);
             }
@@ -228,34 +230,36 @@ class Rank {
             if (typeof player.score !== "undefined") {
                 playerRating.score = player.score;
             }
-            playerRatings[shortid] = playerRating;
+            playerRatings[i] = playerRating;
         }
         let lowestRank = 99999;
-        for (var shortid in teams) {
-            let team = teams[shortid];
+        for (let i = 0; i < teams.length; i++) { //} team of teams) {
+            let team = teams[i];
             if (team.rank < lowestRank)
                 lowestRank = team.rank;
         }
-        for (var shortid in teams) {
-            let team = teams[shortid];
+        for (let i = 0; i < teams.length; i++) {
+            let team = teams[i];
             if (typeof team.rank === "undefined") {
-                console.error("Team [" + shortid + "] (" + team.name + ") is missing rank");
+                console.error("Team [" + team.team_slug + "] (" + team.name + ") is missing rank");
                 return null;
             }
             if (team.rank == lowestRank) {
-                rankOne.push(shortid);
+                rankOne.push(i);
             }
             else {
-                rankOther.push(shortid);
+                rankOther.push(i);
             }
         }
         let isTied = false;
         if (rankOther.length == 0) {
             isTied = true;
-            for (var shortid of rankOne) {
-                let team = teams[shortid];
+            for (var team_index of rankOne) {
+                let team = teams[team_index];
                 for (let i = 0; i < team.players.length; i++) {
-                    let shortid = team.players[i];
+                    let playerid = team.players[i];
+                    let player = players[playerid];
+                    let shortid = player.shortid;
                     let playerRating = storedPlayerRatings[shortid];
                     playerRating.tie++;
                     playerRating.winloss = 0;
@@ -263,19 +267,23 @@ class Rank {
             }
         }
         else {
-            for (var shortid of rankOne) {
-                let team = teams[shortid];
+            for (var team_index of rankOne) {
+                let team = teams[team_index];
                 for (let i = 0; i < team.players.length; i++) {
-                    let shortid = team.players[i];
+                    let playerid = team.players[i];
+                    let player = players[playerid];
+                    let shortid = player.shortid;
                     let playerRating = storedPlayerRatings[shortid];
                     playerRating.win++;
                     playerRating.winloss = 1;
                 }
             }
-            for (var shortid of rankOther) {
-                let team = teams[shortid];
+            for (var team_index of rankOther) {
+                let team = teams[team_index];
                 for (let i = 0; i < team.players.length; i++) {
-                    let shortid = team.players[i];
+                    let playerid = team.players[i];
+                    let player = players[playerid];
+                    let shortid = player.shortid;
                     let playerRating = storedPlayerRatings[shortid];
                     playerRating.loss++;
                     playerRating.winloss = -1;
@@ -288,13 +296,14 @@ class Rank {
         //update player ratings from openskill mutation of playerRatings
         let ratingsList = [];
         let notifyInfo = [];
-        let totalTime = Math.floor((gamestate.room.endtime - gamestate.room.starttime) / 1000);
-        for (var shortid in players) {
-            let player = players[shortid];
-            if (!(shortid in playerRatings)) {
+        let totalTime = Math.floor((gamestate.room.endtime) / 1000);
+        for (let i = 0; i < players.length; i++) { //} player of players) {
+            let player = players[i];
+            let shortid = player.shortid;
+            if (!(playerRatings[i])) {
                 continue;
             }
-            let rating = playerRatings[shortid];
+            let rating = playerRatings[i];
             rating.played = Number(rating.played) + 1;
             //UPDATE PLAYER data sent back, using private fields to hide the win/loss/tie/played counts from others
             player.rating = rating.rating;
@@ -317,6 +326,8 @@ class Rank {
                 winloss: rating.winloss,
                 highscore: rating.score || 0,
                 playtime: rating.playtime + totalTime,
+                rank: player.rank,
+                score: player.score
             });
             delete rating["rank"];
             delete rating["score"];
@@ -342,8 +353,8 @@ class Rank {
         try {
             let results = null;
             //rate based on teams
-            for (var teamid of gameteams) {
-                let team = gameteams[teamid];
+            for (let i = 0; i < gameteams.length; i++) { //} team of gameteams) {
+                let team = gameteams[i];
                 let playerids = team.players;
                 let teamplayers = [];
                 let teamratings = [];

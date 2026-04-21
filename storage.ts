@@ -1,6 +1,7 @@
 import cache from 'shared/services/cache.js';
 import r from 'shared/services/room.js';
-import delta from "acos-json-delta";
+// import delta from "acos-json-delta";
+import { hidden } from 'acos-json-encoder';
 class Storage {
     constructor() {
         this.users = {};
@@ -30,8 +31,8 @@ class Storage {
             let dlta = JSON.parse(JSON.stringify(state));
             if (dlta && shortid) {
                 let hiddenState = null;
-                if (dlta.state) hiddenState = delta.hidden(dlta.state);
-                let hiddenPlayers = delta.hidden(dlta.players) || {};
+                if (dlta.state) hiddenState = hidden(dlta.state);
+                let hiddenPlayers = hidden(dlta.players) || {};
 
                 if (hiddenPlayers && dlta?.players) {
                     if (shortid in hiddenPlayers) {
