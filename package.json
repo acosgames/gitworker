@@ -20,6 +20,7 @@
         "typescript": "^5.9.3"
     },
     "dependencies": {
+        "@acosgames/framework": "^1.0.11",
         "@discordjs/rest": "^0.3.0",
         "acos-json-delta": "^1.0.4",
         "acos-json-encoder": "^2.0.15",
