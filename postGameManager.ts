@@ -93,7 +93,8 @@ async function onGameover(meta, gamestate) {
         try {
             if (gamestate.teams && Object.keys(gamestate.teams).length > 0)
                 ratings = await rank.processTeamRatings(meta, gamestate, storedPlayerRatings);
-            else ratings = await rank.processPlayerRatings(meta, gamestate, storedPlayerRatings);
+            else 
+                ratings = await rank.processPlayerRatings(meta, gamestate, storedPlayerRatings);
 
             let config = { game_slug, room_slug, type: "rank", season: meta.season };
 
