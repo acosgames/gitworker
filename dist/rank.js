@@ -19,8 +19,8 @@ class Rank {
         const room_slug = meta.room_slug;
         let highScoreList = [];
         // let gameinfo = await room.getGameInfo(game_slug);
-        for (var shortid in players) {
-            let player = players[shortid];
+        for (var player of players) {
+            let shortid = player.shortid;
             if (!(shortid in storedPlayerRatings)) {
                 storedPlayerRatings[shortid] = await ratings.findPlayerRating(shortid, meta, game_slug);
             }

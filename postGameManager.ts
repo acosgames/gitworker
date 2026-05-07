@@ -87,19 +87,19 @@ async function onGameover(meta, gamestate) {
     let game_slug = meta.game_slug;
     let room_slug = meta.room_slug;
 
-    let ratings = [];
+    let matchRatings = [];
     let storedPlayerRatings = {};
     if (meta.maxplayers > 1) {
         try {
             if (gamestate.teams && Object.keys(gamestate.teams).length > 0)
-                ratings = await rank.processTeamRatings(meta, gamestate, storedPlayerRatings);
+                matchRatings = await rank.processTeamRatings(meta, gamestate, storedPlayerRatings);
             else 
-                ratings = await rank.processPlayerRatings(meta, gamestate, storedPlayerRatings);
+                matchRatings = await rank.processPlayerRatings(meta, gamestate, storedPlayerRatings);
 
             let config = { game_slug, room_slug, type: "rank", season: meta.season };
 
             await leaderboard.updateLeaderboard(config, gamestate.players);
-            await room.updatePlayerRoom(room_slug, gamestate, ratings);
+            await room.updatePlayerRoom(room_slug, gamestate, matchRatings);
 
             let notifyInfo = [];
             for (let shortid in gamestate.players) {
@@ -131,7 +131,7 @@ async function onGameover(meta, gamestate) {
         rabbitmq.publish("ws", "onStatsUpdate", {
             type: "rankings",
             room_slug,
-            payload: ratings,
+            payload: matchRatings,
         });
 
         let playerAchievements = await achievements.updatePlayerAchievements(meta, gamestate);
